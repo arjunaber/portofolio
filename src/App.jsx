@@ -80,7 +80,7 @@ function App() {
       moreImages: [
         "assets/img/aga-farming.png",
         "assets/img/aga-1.png",
-        "assets/img/aga-2.png",
+        "assets/img/aga-2.jpeg",
       ],
     },
     {
@@ -108,7 +108,7 @@ function App() {
       img: "assets/img/mybtp-v1.png",
       description:
         "Projects (2024): Successfully migrated thousands of student and lecturer records from multiple Telkom University campuses into a centralized system.",
-      moreImages: ["assets/img/mybtp-v1.png", "assets/img/mybtp-v1-alt.png"],
+      moreImages: ["assets/img/mybtp-v1.png"],
     },
     {
       id: 5,
