@@ -19,8 +19,49 @@ function App() {
   const [selectedProject, setSelectedProject] = useState(null);
   const [currentImgIndex, setCurrentImgIndex] = useState(0);
 
+  // Warning Modal State
+  const [showWarningModal, setShowWarningModal] = useState(false);
+
   const currentYear = new Date().getFullYear();
   const age = currentYear - 2002;
+
+  // --- EFFECT: Proteksi Anti-Inspect & Klik Kanan (Pemicu Custom Modal) ---
+  useEffect(() => {
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+      setShowWarningModal(true); // Munculkan modal kustom
+    };
+
+    const handleKeyDown = (e) => {
+      // 123 = F12
+      // Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
+      // Ctrl+U
+      if (
+        e.keyCode === 123 ||
+        (e.ctrlKey &&
+          e.shiftKey &&
+          (e.key === "I" ||
+            e.key === "i" ||
+            e.key === "J" ||
+            e.key === "j" ||
+            e.key === "C" ||
+            e.key === "c")) ||
+        (e.ctrlKey && (e.key === "U" || e.key === "u"))
+      ) {
+        e.preventDefault();
+        setShowWarningModal(true); // Munculkan modal kustom
+        return false;
+      }
+    };
+
+    document.addEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("contextmenu", handleContextMenu);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   // --- EFFECT: Efek Mengetik di Section Hero ---
   useEffect(() => {
@@ -43,7 +84,7 @@ function App() {
       let typeSpeed = isDeleting ? 50 : 100;
 
       if (!isDeleting && charIndex === currentWord.length) {
-        typeSpeed = 2000; // Berhenti sebentar di akhir kata
+        typeSpeed = 2000;
         isDeleting = true;
       } else if (isDeleting && charIndex === 0) {
         isDeleting = false;
@@ -131,14 +172,14 @@ function App() {
             ? 0
             : prevIndex + 1,
         );
-      }, 1000); // 1000ms = 1 detik
+      }, 1000);
     }
     return () => clearInterval(interval);
   }, [selectedProject]);
 
   const handleOpenModal = (project) => {
     setSelectedProject(project);
-    setCurrentImgIndex(0); // Reset index ke gambar pertama saat buka modal
+    setCurrentImgIndex(0);
   };
 
   // --- HANDLERS ---
@@ -151,7 +192,6 @@ function App() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Konfigurasi template EmailJS Anda
     emailjs
       .send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", formData, "YOUR_USER_ID")
       .then(() => {
@@ -282,7 +322,6 @@ function App() {
             </div>
 
             <div className="row skills-content">
-              {/* Kolom Kiri */}
               <div className="col-lg-6">
                 <div className="progress">
                   <span className="skill">
@@ -350,7 +389,6 @@ function App() {
                 </div>
               </div>
 
-              {/* Kolom Kanan */}
               <div className="col-lg-6">
                 <div className="progress">
                   <span className="skill">
@@ -583,7 +621,6 @@ function App() {
               </p>
             </div>
 
-            {/* Filter Tabs Kontrol */}
             <div className="row mb-4">
               <div className="col-12 d-flex justify-content-center">
                 <ul
@@ -612,7 +649,6 @@ function App() {
               </div>
             </div>
 
-            {/* Grid Konten Portfolio */}
             <div className="row">
               {portfolioData
                 .filter(
@@ -718,7 +754,7 @@ function App() {
         </div>
       </footer>
 
-      {/* ======= Project Detail Modal (Auto-Slide Images) ======= */}
+      {/* ======= Project Detail Modal ======= */}
       {selectedProject && (
         <div
           className="modal fade show d-block"
@@ -766,7 +802,6 @@ function App() {
                     }}
                   />
                 </div>
-                {/* Indikator Titik Slideshow */}
                 <div className="d-flex justify-content-center mb-3">
                   {selectedProject.moreImages.map((_, idx) => (
                     <span
@@ -799,6 +834,42 @@ function App() {
                   onClick={() => setSelectedProject(null)}
                 >
                   Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======= CUSTOM ANTI-INSPECT WARNING MODAL ======= */}
+      {showWarningModal && (
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0,0,0,0.85)", zIndex: 1100 }}
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content text-center border-0 p-4 shadow-lg">
+              <div className="modal-body">
+                <div className="mb-3 text-danger">
+                  <i
+                    className="bi bi-exclamation-triangle-fill"
+                    style={{ fontSize: "3.5rem" }}
+                  ></i>
+                </div>
+                <h3 className="fw-bold text-dark mb-3">
+                  eeeitsss mau ngapain bang?
+                </h3>
+                <p className="text-muted mb-4">
+                  Nanti Arjuna marah lho, mending lihat-lihat isi portofolionya
+                  aja langsung!
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-danger px-4 fw-bold"
+                  onClick={() => setShowWarningModal(false)}
+                >
+                  Ampun Bang
                 </button>
               </div>
             </div>
