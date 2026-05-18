@@ -177,7 +177,7 @@ section {
   height: 100vh;
   background:
     linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
-    url("./assets/img/hero.png") top center no-repeat;
+    url("/assets/img/hero.png") top center no-repeat;
   background-size: cover;
   padding: 0 15px;
 }
