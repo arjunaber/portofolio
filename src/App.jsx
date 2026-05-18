@@ -15,8 +15,12 @@ function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [heroText, setHeroText] = useState("");
 
+  // Portfolio States
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [currentImgIndex, setCurrentImgIndex] = useState(0);
+
   const currentYear = new Date().getFullYear();
-  const age = currentYear - 1993;
+  const age = currentYear - 2002;
 
   // --- EFFECT: Efek Mengetik di Section Hero ---
   useEffect(() => {
@@ -64,44 +68,78 @@ function App() {
     };
   }, []);
 
-  // --- DATA: Daftar Portfolio (Sesuai Kategori di Video) ---
+  // --- DATA: Daftar Portfolio ---
   const portfolioData = [
     {
       id: 1,
       title: "AGA Smart Farming",
       category: "IOT",
       img: "assets/img/aga-farming.png",
+      description:
+        "Building Smart Farming and IoT solutions using Arduino IDE integrated with Laravel based web platforms. Features vision-based pest detection and real-time soil monitoring.",
+      moreImages: [
+        "assets/img/aga-farming.png",
+        "assets/img/aga-1.png",
+        "assets/img/aga-2.png",
+      ],
     },
     {
       id: 2,
       title: "TAKATO.id",
       category: "WEB",
       img: "assets/img/takato.png",
+      description:
+        "Projects (2025): Independently designed and developed a responsive villa reservation management system and grand scheduling platform using a full-stack development approach.",
+      moreImages: ["assets/img/takato.png", "assets/img/takato-1.png"],
     },
     {
       id: 3,
       title: "MyBTP V2 (Super Apps)",
       category: "WEB",
-      img: "./assets/img/mybtp-v2.png",
+      img: "assets/img/mybtp-v2.png",
+      description:
+        "Projects (2025): Developed a centralized super application that integrated multiple systems and services into a single unified platform to improve accessibility and operational efficiency.",
+      moreImages: ["assets/img/mybtp-v2.png", "assets/img/mybtp-v2-alt.png"],
     },
     {
       id: 4,
       title: "MyBTP V1",
       category: "WEB",
       img: "assets/img/mybtp-v1.png",
+      description:
+        "Projects (2024): Successfully migrated thousands of student and lecturer records from multiple Telkom University campuses into a centralized system.",
+      moreImages: ["assets/img/mybtp-v1.png", "assets/img/mybtp-v1-alt.png"],
     },
     {
       id: 5,
       title: "Talentern",
       category: "WEB",
       img: "assets/img/talentern.png",
+      description:
+        "Projects (2023): Developed a web-based internship management system for Telkom University to manage and monitor internship students efficiently.",
+      moreImages: ["assets/img/talentern.png", "assets/img/talentern-alt.png"],
     },
   ];
 
-  const filteredPortfolio =
-    activeFilter === "ALL"
-      ? portfolioData
-      : portfolioData.filter((item) => item.category === activeFilter);
+  // Logic untuk Auto-Slide Gambar di dalam Modal (1 detik)
+  useEffect(() => {
+    let interval;
+    if (selectedProject && selectedProject.moreImages.length > 1) {
+      interval = setInterval(() => {
+        setCurrentImgIndex((prevIndex) =>
+          prevIndex === selectedProject.moreImages.length - 1
+            ? 0
+            : prevIndex + 1,
+        );
+      }, 1000); // 1000ms = 1 detik
+    }
+    return () => clearInterval(interval);
+  }, [selectedProject]);
+
+  const handleOpenModal = (project) => {
+    setSelectedProject(project);
+    setCurrentImgIndex(0); // Reset index ke gambar pertama saat buka modal
+  };
 
   // --- HANDLERS ---
   const handleInputChange = (e) => {
@@ -109,11 +147,31 @@ function App() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    // Konfigurasi template EmailJS Anda
+    emailjs
+      .send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", formData, "YOUR_USER_ID")
+      .then(() => {
+        alert("Pesan berhasil dikirim!");
+        setFormData({ name: "", email: "", subject: "", message: "" });
+        setIsSubmitting(false);
+      })
+      .catch((err) => {
+        console.error("Gagal mengirim pesan:", err);
+        alert("Gagal mengirim pesan, silakan coba lagi.");
+        setIsSubmitting(false);
+      });
+  };
+
   return (
     <div className="d-flex">
       <Sidebar />
 
       <main id="main" className="flex-grow-1">
+        {/* ======= Hero Section ======= */}
         <section
           id="hero"
           className="d-flex flex-column justify-content-center align-items-center"
@@ -126,6 +184,8 @@ function App() {
             </p>
           </div>
         </section>
+
+        {/* ======= About Section ======= */}
         <section id="about" className="about">
           <div className="container">
             <div className="section-title">
@@ -213,6 +273,7 @@ function App() {
             </div>
           </div>
         </section>
+
         {/* ======= Skills Section ======= */}
         <section id="skills" className="skills section-bg">
           <div className="container">
@@ -359,6 +420,7 @@ function App() {
             </div>
           </div>
         </section>
+
         {/* ======= Resume Section ======= */}
         <section id="resume" className="resume">
           <div className="container">
@@ -509,7 +571,8 @@ function App() {
             </div>
           </div>
         </section>
-        {/* ======= Portfolio Section (Sistem Filter Terpasang) ======= */}
+
+        {/* ======= Portfolio Section ======= */}
         <section id="portfolio" className="portfolio section-bg">
           <div className="container">
             <div className="section-title">
@@ -520,47 +583,66 @@ function App() {
               </p>
             </div>
 
-            <div className="row">
-              <div className="col-lg-12 d-flex justify-content-center">
-                <ul id="portfolio-flters">
-                  {["ALL", "WEB", "IOT"].map((cat) => (
-                    <li
-                      key={cat}
-                      className={activeFilter === cat ? "filter-active" : ""}
-                      onClick={() => setActiveFilter(cat)}
-                    >
-                      {cat}
-                    </li>
-                  ))}
+            {/* Filter Tabs Kontrol */}
+            <div className="row mb-4">
+              <div className="col-12 d-flex justify-content-center">
+                <ul
+                  className="list-inline text-center"
+                  style={{ cursor: "pointer" }}
+                >
+                  <li
+                    className={`list-inline-item mx-3 ${activeFilter === "ALL" ? "text-primary fw-bold text-decoration-underline" : "text-secondary"}`}
+                    onClick={() => setActiveFilter("ALL")}
+                  >
+                    All
+                  </li>
+                  <li
+                    className={`list-inline-item mx-3 ${activeFilter === "WEB" ? "text-primary fw-bold text-decoration-underline" : "text-secondary"}`}
+                    onClick={() => setActiveFilter("WEB")}
+                  >
+                    Web Development
+                  </li>
+                  <li
+                    className={`list-inline-item mx-3 ${activeFilter === "IOT" ? "text-primary fw-bold text-decoration-underline" : "text-secondary"}`}
+                    onClick={() => setActiveFilter("IOT")}
+                  >
+                    Internet of Things
+                  </li>
                 </ul>
               </div>
             </div>
 
-            <div className="row portfolio-container">
+            {/* Grid Konten Portfolio */}
+            <div className="row">
               {portfolioData
                 .filter(
                   (item) =>
                     activeFilter === "ALL" || item.category === activeFilter,
                 )
                 .map((item) => (
-                  <div
-                    key={item.id}
-                    className="col-lg-4 col-md-6 portfolio-item"
-                  >
-                    <div className="portfolio-wrap">
+                  <div className="col-lg-4 col-md-6 mb-4" key={item.id}>
+                    <div className="card h-100 shadow-sm border-0">
                       <img
                         src={item.img}
-                        className="img-fluid"
+                        className="card-img-top"
                         alt={item.title}
+                        style={{ height: "200px", objectFit: "cover" }}
                       />
-                      <div className="portfolio-info">
-                        <h4>{item.title}</h4>
-                        <p>{item.category}</p>
-                        <div className="portfolio-links">
-                          {/* Kamu bisa menambahkan icon link atau detail di sini */}
-                          <i className="bx bx-plus"></i>
-                          <i className="bx bx-link"></i>
+                      <div className="card-body d-flex flex-column justify-content-between">
+                        <div>
+                          <h5 className="card-title fw-bold mb-2">
+                            {item.title}
+                          </h5>
+                          <p className="card-text text-muted small">
+                            {item.description}
+                          </p>
                         </div>
+                        <button
+                          className="btn btn-outline-primary btn-sm mt-3 w-100"
+                          onClick={() => handleOpenModal(item)}
+                        >
+                          View Details
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -571,7 +653,7 @@ function App() {
 
         {/* ======= Contact Section ======= */}
         <section id="contact" className="contact section-bg">
-          <div className="container" data-aos="fade-up">
+          <div className="container">
             <div className="section-title">
               <h2>Contact</h2>
               <p>
@@ -580,45 +662,43 @@ function App() {
               </p>
             </div>
 
-            {/* Menggunakan row-cols-md-3 agar penuh dan rapi */}
-            <div className="row justify-content-center text-center">
-              {/* Alamat */}
+            <div className="row justify-content-center text-center mb-5">
               <div className="col-lg-3 col-md-6 mb-4">
-                <div className="info-item-full">
-                  <i className="bi bi-geo-alt"></i>
-                  <h4>Location</h4>
-                  <p>Jl. Bojongsoang No.26, Bandung, Indonesia</p>
+                <div className="info-item-full p-3 shadow-sm rounded bg-white h-100">
+                  <i className="bi bi-geo-alt fs-3 text-primary"></i>
+                  <h4 className="mt-2 fw-bold small">Location</h4>
+                  <p className="text-muted mb-0 small">
+                    Jl. Bojongsoang No.26, Bandung, Indonesia
+                  </p>
                 </div>
               </div>
 
-              {/* Email */}
               <div className="col-lg-3 col-md-6 mb-4">
-                <div className="info-item-full">
-                  <i className="bi bi-envelope"></i>
-                  <h4>Email</h4>
-                  <p>arjunaaber2@gmail.com</p>
+                <div className="info-item-full p-3 shadow-sm rounded bg-white h-100">
+                  <i className="bi bi-envelope fs-3 text-primary"></i>
+                  <h4 className="mt-2 fw-bold small">Email</h4>
+                  <p className="text-muted mb-0 small">arjunaaber2@gmail.com</p>
                 </div>
               </div>
 
-              {/* Telepon */}
               <div className="col-lg-3 col-md-6 mb-4">
-                <div className="info-item-full">
-                  <i className="bi bi-phone"></i>
-                  <h4>Call</h4>
-                  <p>+62 812 1483 1823</p>
+                <div className="info-item-full p-3 shadow-sm rounded bg-white h-100">
+                  <i className="bi bi-phone fs-3 text-primary"></i>
+                  <h4 className="mt-2 fw-bold small">Call</h4>
+                  <p className="text-muted mb-0 small">+62 812 1483 1823</p>
                 </div>
               </div>
 
-              {/* LinkedIn */}
               <div className="col-lg-3 col-md-6 mb-4">
-                <div className="info-item-full">
-                  <i className="bi bi-linkedin"></i>
-                  <h4>LinkedIn</h4>
-                  <p>
+                <div className="info-item-full p-3 shadow-sm rounded bg-white h-100">
+                  <i className="bi bi-linkedin fs-3 text-primary"></i>
+                  <h4 className="mt-2 fw-bold small">LinkedIn</h4>
+                  <p className="mb-0 small">
                     <a
                       href="https://linkedin.com/in/arjunaber"
                       target="_blank"
                       rel="noreferrer"
+                      className="text-decoration-none"
                     >
                       arjunaber
                     </a>
@@ -630,12 +710,101 @@ function App() {
         </section>
       </main>
 
+      {/* ======= Footer ======= */}
       <footer id="footer">
         <div className="container">
           <div className="copyright">© Copyright {currentYear}</div>
           <div className="credits">Maintained by ARJUNABER</div>
         </div>
       </footer>
+
+      {/* ======= Project Detail Modal (Auto-Slide Images) ======= */}
+      {selectedProject && (
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0,0,0,0.7)", zIndex: 1050 }}
+        >
+          <div className="modal-dialog modal-lg modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header d-flex justify-content-between align-items-center">
+                <h5 className="modal-title fw-bold">{selectedProject.title}</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setSelectedProject(null)}
+                  style={{
+                    border: "none",
+                    background: "none",
+                    fontSize: "1.5rem",
+                    lineHeight: 1,
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+              <div className="modal-body">
+                <div
+                  className="text-center mb-3"
+                  style={{
+                    height: "350px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    overflow: "hidden",
+                    backgroundColor: "#f8f9fa",
+                  }}
+                >
+                  <img
+                    src={selectedProject.moreImages[currentImgIndex]}
+                    className="img-fluid rounded"
+                    alt={`${selectedProject.title} step`}
+                    style={{
+                      maxHeight: "100%",
+                      maxWidth: "100%",
+                      objectFit: "contain",
+                    }}
+                  />
+                </div>
+                {/* Indikator Titik Slideshow */}
+                <div className="d-flex justify-content-center mb-3">
+                  {selectedProject.moreImages.map((_, idx) => (
+                    <span
+                      key={idx}
+                      className={`mx-1 rounded-circle ${idx === currentImgIndex ? "bg-primary" : "bg-secondary"}`}
+                      style={{
+                        width: "10px",
+                        height: "10px",
+                        cursor: "pointer",
+                        transition: "background-color 0.2s",
+                      }}
+                      onClick={() => setCurrentImgIndex(idx)}
+                    ></span>
+                  ))}
+                </div>
+                <h6 className="fw-bold">
+                  Category:{" "}
+                  <span className="badge bg-secondary ms-1">
+                    {selectedProject.category}
+                  </span>
+                </h6>
+                <p className="mt-3 text-muted" style={{ lineHeight: "1.6" }}>
+                  {selectedProject.description}
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setSelectedProject(null)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
